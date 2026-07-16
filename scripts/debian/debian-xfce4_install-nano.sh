@@ -240,7 +240,7 @@ create_user_account() {
   # Start to do create
   if [ $DRY_RUN -eq 1 ]; then
     echo -e "Create User \033[1m$NEW_USERNAME\033[0m with UID \033[1m$NEW_UID\033[0m with SHELL bash"
-    (for g in "${COMMON_GROUPS[@]}" ; do echo "Invite \033[1m$NEW_USERNAME\033[0m into $g"; done)
+    (for g in "${COMMON_GROUPS[@]}" ; do echo -e "Invite \033[1m$NEW_USERNAME\033[0m into $g"; done)
   else
     useradd -m -u "$NEW_UID" -s /bin/bash "$NEW_USERNAME" && \
     (for g in "${COMMON_GROUPS[@]}" ; do usermod -aG "$g" "$NEW_USERNAME" || true; done)
@@ -264,6 +264,10 @@ create_user_account() {
   fi
 }
 
+cleanup() {
+  echo -e "Total \033[34;1m${SECONDS}s\033[0m"
+}
+trap cleanup EXIT
 check_root
 check_distro
 greeting
@@ -274,7 +278,7 @@ else
   set_cn_mirror
 fi
 
-if [ $DO_NOT_ASK -eq 1 ] || [[ "$(read -r -p "Contine install Xfce4 Desktop \033[1m[Y/n]\033[0m " _confirm && echo "${_confirm,,}")" =~ ^(yes|y|)$ ]]; then
+if [ $DO_NOT_ASK -eq 1 ] || [[ "$(read -r -p $'Contine install Xfce4 Desktop \033[1m[Y/n]\033[0m ' _confirm && echo "${_confirm,,}")" =~ ^(yes|y|)$ ]]; then
   do_install_de
 else
   echo "Abort."
@@ -296,5 +300,6 @@ if [ $SHOULD_ADD_USER -eq 1 ]; then
 else
   echo "Will not create user."
 fi
+echo -e "\n\033[32mSuccess\033[0m"
 exit 0
 

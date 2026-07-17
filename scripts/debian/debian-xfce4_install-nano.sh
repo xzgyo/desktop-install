@@ -48,7 +48,7 @@ get_debian_version_id_by_codename() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --help)
-      echo "$0 [--dry-run] [--cn] [--do-not-add-user] [--new-uid=UID] [--new-user=USER] [--new-user-password=PASSWORD] [--codename-overwrite=DEBIAN_VERSION_CODENAME] [--do-not-ask]"
+      echo "$0 [--dry-run] [--cn] [--do-not-add-user] [--new-uid=UID] [--new-user=USER] [--new-user-password=PASSWORD] [--codename-overwrite=DEBIAN_VERSION_CODENAME] [--do-not-ask] [--minimal]"
       echo "--cn argument will auto change APT repo to mirrors.tuna.tsinghua.edu.cn."
       exit 0
       ;;

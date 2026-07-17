@@ -1,0 +1,1 @@
+docker run -it --name debian_xfce4 --hostname debian -e LANG=C.UTF-8 -e TERM=xterm-256color -v /etc/localtime:/etc/localtime:ro --device /dev/dri --group-add video debian:stable

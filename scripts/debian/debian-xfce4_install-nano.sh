@@ -3,16 +3,23 @@
 # Author: xzgyo
 set -e
 set -o pipefail
+
+# 常量
 WILL_INSTALL_NAME="Xfce4"
 WILL_INSTALL_TYPE="Desktop Environment"
 TARGET_SYSTEM="Debian"
 COMMON_GROUPS=(sudo audio cdrom dialout dip floppy plugdev users video)
+
+# 变量
 DRY_RUN=0
 ADD_USER=1
 USE_CN_MIRROR=0
 SYSTEM_CODENAME="$(. /etc/os-release && echo $VERSION_CODENAME)"
 SYSTEM_VERSION_ID="$(. /etc/os-release && echo $VERSION_ID)"
 DO_NOT_ASK=0
+MINIMAL=0
+WITH_ERROR=0
+SUCCESS=1
 
 get_debian_version_id_by_codename() {
   local code="${1,,}"
@@ -76,6 +83,10 @@ while [ $# -gt 0 ]; do
       SYSTEM_VERSION_ID="$(get_debian_version_id_by_codename "$SYSTEM_CODENAME")"
       shift
       ;;
+    --minimal)
+      MINIMAL=1
+      shift
+      ;;
     --do-not-ask)
       DO_NOT_ASK=1
       shift
@@ -105,7 +116,12 @@ fi
 check_root() {
   if [ "$(id -u)" -ne 0 ]; then
     echo "Are you root?"
-    exit 1
+    if [ $DRY_RUN -eq 0 ]; then
+      echo -e "Run current script with ROOT PERMISSION again."
+      exit 1
+    else
+      echo -e "Root check skipped in --dry-run..."
+    fi
   fi
 }
 
@@ -124,10 +140,11 @@ greeting() {
 # }
 
 check_distro() {
-  local CURRENT_DISTRO="$( . /etc/os-release >/dev/null 2>&1 && echo $ID )"
+  local CURRENT_DISTRO="$( . /etc/os-release >/dev/null 2>&1 && echo "$ID" )"
   echo -e "The current distribution is \033[1m$CURRENT_DISTRO\033[0m"
   if [ "$CURRENT_DISTRO" != "debian" ]; then
     echo -e "\033[1;31mDebian is required.\033[0m"
+    SUCCESS=0
     exit 1
   fi
 }
@@ -138,11 +155,11 @@ set_cn_mirror() {
     echo "Using debian codename: $SYSTEM_CODENAME"
     if [ $DRY_RUN -ne 1 ]; then
       if [[ $SYSTEM_CODENAME =~ ^(sid|unstable)$ ]]; then
-        APT_SOURCES_TRADITIONAL="deb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware"
-        APT_SOURCES_DEB822="Types: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg"
+        local APT_SOURCES_TRADITIONAL="deb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware"
+        local APT_SOURCES_DEB822="Types: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg"
       else
-        APT_SOURCES_TRADITIONAL="deb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware"
-        APT_SOURCES_DEB822="Types: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg"
+        local APT_SOURCES_TRADITIONAL="deb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware"
+        local APT_SOURCES_DEB822="Types: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg"
       fi
       if [ -f /etc/apt/sources.list.d/debian.sources ] || [ $SYSTEM_VERSION_ID -ge 12 ]; then
         mkdir -p /etc/apt/sources.list.d/
@@ -178,25 +195,38 @@ do_install_de() {
     bash-completion sudo iproute2 net-tools iputils-ping
     nano vim procps curl wget git screen
   )
-  local DE_PKGS=(
-    task-desktop dbus-x11 eject cups fonts-symbola xdg-utils notify-osd
-    'fonts-noto*' xfce4 xfce4-appmenu-plugin xfce4-netload-plugin xfce4-battery-plugin
-    xfce4-clipman-plugin xfce4-places-plugin xfce4-cpufreq-plugin xfce4-sensors-plugin
-    xfce4-cpugraph-plugin xfce4-smartbookmark-plugin xfce4-datetime-plugin
-    xfce4-systemload-plugin xfce4-diskperf-plugin xfce4-time-out-plugin xfce4-docklike-plugin
-    xfce4-timer-plugin xfce4-eyes-plugin xfce4-verve-plugin xfce4-fsguard-plugin
-    xfce4-wavelan-plugin xfce4-genmon-plugin xfce4-weather-plugin xfce4-indicator-plugin
-    xfce4-whiskermenu-plugin xfce4-mailwatch-plugin xfce4-windowck-plugin xfce4-mount-plugin
-    xfce4-xkb-plugin xfce4-mpc-plugin xfce4-terminal
-  )
+  if [ $MINIMAL -eq 0 ]; then
+    local DE_PKGS=(
+      dbus-x11 eject cups fonts-symbola xdg-utils notify-osd
+      'fonts-noto*' xfce4 xfce4-terminal xfce4-appmenu-plugin
+      xfce4-netload-plugin xfce4-battery-plugin xfce4-clipman-plugin 
+      xfce4-places-plugin xfce4-cpufreq-plugin xfce4-sensors-plugin
+      xfce4-cpugraph-plugin xfce4-smartbookmark-plugin
+      xfce4-datetime-plugin xfce4-systemload-plugin
+      xfce4-diskperf-plugin xfce4-time-out-plugin xfce4-docklike-plugin
+      xfce4-timer-plugin xfce4-eyes-plugin xfce4-verve-plugin
+      xfce4-fsguard-plugin xfce4-wavelan-plugin xfce4-genmon-plugin
+      xfce4-weather-plugin xfce4-indicator-plugin
+      xfce4-whiskermenu-plugin xfce4-mailwatch-plugin
+      xfce4-windowck-plugin xfce4-mount-plugin
+      xfce4-xkb-plugin xfce4-mpc-plugin
+    )
+  else
+  # Minimal installation
+    local DE_PKGS=(
+      dbus-x11 eject cups fonts-symbola xdg-utils
+      notify-osd xfce4 xfce4-terminal
+    )
+  fi
   if [ $DRY_RUN -eq 1 ]; then
     echo "apt update"
   else
-    apt update || { echo -e "\033[31mAPT update failed!\033[0m"; exit 1; }
+    apt update || { echo -e "\033[31mAPT update failed!\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
   fi
-  apt full-upgrade "$SIMULATE_OR_Y" || echo -e "\033[33mUpgrade warning...\033[0m"
-  apt install "$SIMULATE_OR_Y" "${BASE_TOOLS_PKGS[@]}" || echo -e "\033[33mFailed to install some tools...\033[0m"
-  apt install "$SIMULATE_OR_Y" --no-install-recommends "${DE_PKGS[@]}" || echo -e "\033[31mFailed to install desktop...\033[0m"
+  apt full-upgrade "$SIMULATE_OR_Y" || { echo -e "\033[33mUpgrade FAILED!\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
+  apt install "$SIMULATE_OR_Y" "${BASE_TOOLS_PKGS[@]}" || { echo -e "\033[33mFailed to install some tools...\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); }
+  apt install "$SIMULATE_OR_Y" --no-install-recommends "${DE_PKGS[@]}" || { echo -e "\033[31mFailed to install desktop...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
+  apt autoremove --purge "$SIMULATE_OR_Y" || { echo -e "\033[31mFailed to apt autoremove --purge...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); }
 }
 
 create_user_account() {
@@ -214,11 +244,14 @@ create_user_account() {
   while true; do
     echo "Acceptable UID range: $UID_MIN ~ $UID_MAX"
     if [ -n "$NEW_UID" ] && [[ "$NEW_UID" =~ ^[0-9]+$ ]] && [ "$NEW_UID" -ge "$UID_MIN" ] && [ "$NEW_UID" -le "$UID_MAX" ]; then
+      echo -e "UID for new user is: \033[1m$NEW_UID\033[0m"
       break
     else
       if [ $DO_NOT_ASK -eq 1 ]; then
         echo -e "\033[31mERROR: Invalid or missing UID '$NEW_UID' in unattended mode! (Allowed range: $UID_MIN ~ $UID_MAX)\033[0m"
-        exit 1
+        SUCCESS=0
+        WITH_ERROR=$((WITH_ERROR+1))
+        exit $WITH_ERROR
       fi
       read -p "Enter UID for new user ($UID_MIN ~ $UID_MAX): " NEW_UID
     fi
@@ -227,11 +260,14 @@ create_user_account() {
   # Check Username
   while true; do
     if [ -n "$NEW_USERNAME" ] && [[ "$NEW_USERNAME" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+      echo -e "UserName for new user is: \033[1m$NEW_USERNAME\033[0m"
       break
     else
       if [ $DO_NOT_ASK -eq 1 ]; then
         echo -e "\033[31mERROR: Invalid or missing username '$NEW_USERNAME' in unattended mode! (Must match ^[a-z_][a-z0-9_-]*$)\033[0m"
-        exit 1
+        SUCCESS=0
+        WITH_ERROR=$((WITH_ERROR+1))
+        exit $WITH_ERROR
       fi
       read -p "Enter a valid Unix username: " NEW_USERNAME
     fi
@@ -239,7 +275,7 @@ create_user_account() {
 
   # Start to do create
   if [ $DRY_RUN -eq 1 ]; then
-    echo -e "Create User \033[1m$NEW_USERNAME\033[0m with UID \033[1m$NEW_UID\033[0m with SHELL bash"
+    echo -e "Create User \033[1m$NEW_USERNAME\033[0m with UID \033[1m$NEW_UID\033[0m with SHELL /bin/bash"
     (for g in "${COMMON_GROUPS[@]}" ; do echo -e "Invite \033[1m$NEW_USERNAME\033[0m into $g"; done)
   else
     useradd -m -u "$NEW_UID" -s /bin/bash "$NEW_USERNAME" && \
@@ -272,9 +308,10 @@ check_root
 check_distro
 greeting
 
-if [ "$USE_CN_MIRROR" = "1" ]; then
+echo "Setting APT mirror..."
+if [ $USE_CN_MIRROR -eq 1 ]; then
   set_cn_mirror y
-else
+elif [ $DO_NOT_ASK -eq 0 ]; then
   set_cn_mirror
 fi
 
@@ -285,6 +322,7 @@ else
   exit 1
 fi
 
+echo "User account configuration..."
 SHOULD_ADD_USER=0
 if [ $ADD_USER -eq 1 ]; then
   if [ $DO_NOT_ASK -eq 1 ]; then
@@ -300,6 +338,11 @@ if [ $SHOULD_ADD_USER -eq 1 ]; then
 else
   echo "Will not create user."
 fi
-echo -e "\n\033[32mSuccess\033[0m"
-exit 0
 
+SUMMARY="\n"
+[ $DRY_RUN -eq 1 ] && SUMMARY+="Dry run "
+[ $SUCCESS -eq 1 ] && SUMMARY+="\033[32mSuccess\033[0m" || SUMMARY+="\033[32mFAILED\033[0m"
+SUMMARY+=" with "
+[ $WITH_ERROR -eq 0 ] && SUMMARY+="\033[34;1mNO ERROR.\033[0m" || SUMMARY+="\033[31;1m$WITH_ERROR ERROR(S)\033[0m!"
+echo -e  "$SUMMARY"
+exit $WITH_ERROR

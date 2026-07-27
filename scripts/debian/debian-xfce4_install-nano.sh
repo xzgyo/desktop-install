@@ -16,6 +16,7 @@ ADD_USER=1
 USE_CN_MIRROR=0
 SYSTEM_CODENAME="$(. /etc/os-release && echo $VERSION_CODENAME)"
 SYSTEM_VERSION_ID="$(. /etc/os-release && echo $VERSION_ID)"
+DEB822_LOCATION="/etc/apt/sources.list.d/debian.sources"
 DO_NOT_ASK=0
 MINIMAL=0
 WITH_ERROR=0
@@ -32,7 +33,7 @@ get_debian_version_id_by_codename() {
     trixie)           echo "13" ;;
     forky)            echo "14" ;;
     duke)             echo "15" ;;
-    sid|unstable)     echo "2147483647" ;;
+    # testing|sid|unstable)     echo "2147483647" ;;
     *)
       # stable和testing会传到这里，反正早默认DEB822了
       # 传来一个假的CodeName？我Chovy，传参给我传好了desuwa！
@@ -43,6 +44,18 @@ get_debian_version_id_by_codename() {
       ;;
   esac
 }
+
+get_current_codename() {
+  if [ -f "$DEB822_LOCATION" ]; then
+    local CODENAME="$(grep "Suites" "$DEB822_LOCATION" | sed 's/Suites: //g' | tr ' ' '\n' | grep -v '-')"
+    echo $CODENAME
+  elif [ -f /etc/apt/sources.list ]; then
+    local CODENAME="$(grep '^deb ' /etc/apt/sources.list | awk '{print $3}' | grep -v '-')"
+    echo $CODENAME
+  fi
+}
+
+SYSTEM_CODENAME="$(get_current_codename)"
 
 # 处理参数
 while [ $# -gt 0 ]; do
@@ -161,9 +174,9 @@ set_cn_mirror() {
         local APT_SOURCES_TRADITIONAL="deb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-updates main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ $SYSTEM_CODENAME-backports main contrib non-free non-free-firmware\n\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware\ndeb-src http://mirrors.tuna.tsinghua.edu.cn/debian-security $SYSTEM_CODENAME-security main contrib non-free non-free-firmware"
         local APT_SOURCES_DEB822="Types: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\nSuites: $SYSTEM_CODENAME $SYSTEM_CODENAME-updates $SYSTEM_CODENAME-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb-src\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian-security\nSuites: $SYSTEM_CODENAME-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg"
       fi
-      if [ -f /etc/apt/sources.list.d/debian.sources ] || [ $SYSTEM_VERSION_ID -ge 12 ]; then
+      if [ -f "$DEB822_LOCATION" ] || [ $SYSTEM_VERSION_ID -ge 12 ]; then
         mkdir -p /etc/apt/sources.list.d/
-        echo -e "$APT_SOURCES_DEB822" > /etc/apt/sources.list.d/debian.sources
+        echo -e "$APT_SOURCES_DEB822" > "$DEB822_LOCATION"
         if [ -f /etc/apt/sources.list ]; then
           mv /etc/apt/sources.list /etc/apt/sources.list.bak
         fi

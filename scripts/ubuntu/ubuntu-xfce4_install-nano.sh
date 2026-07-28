@@ -22,6 +22,9 @@ MINIMAL=0
 WITH_ERROR=0
 SUCCESS=1
 
+# 其他变量
+export DEBIAN_FRONTEND=noninteractive
+
 get_version_id_by_codename() {
   local code="${1,,}"
   case "$code" in

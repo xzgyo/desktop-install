@@ -238,7 +238,8 @@ do_install_de() {
   )
   if [ $MINIMAL -eq 0 ]; then
     local DE_PKGS=(
-      dbus-x11 eject cups fonts-symbola xdg-utils 'fonts-noto*' xfce4
+      dbus-x11 eject cups fonts-symbola 'fonts-noto*' xdg-utils
+      yaru-theme-gtk yaru-theme-icon yaru-theme-sound  xfce4
       xfce4-notifyd xfce4-taskmanager xfce4-terminal thunar-archive-plugin
       thunar-media-tags-plugin xfce4-battery-plugin xfce4-clipman-plugin
       xfce4-cpufreq-plugin xfce4-cpugraph-plugin xfce4-diskperf-plugin

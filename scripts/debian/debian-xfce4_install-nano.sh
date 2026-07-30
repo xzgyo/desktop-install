@@ -8,7 +8,7 @@ set -o pipefail
 WILL_INSTALL_NAME="Xfce4"
 WILL_INSTALL_TYPE="Desktop Environment"
 TARGET_SYSTEM="Debian"
-COMMON_GROUPS=(sudo audio cdrom dialout dip floppy plugdev users video)
+COMMON_GROUPS=(cdrom floppy sudo audio dip video plugdev users netdev scanner bluetooth lpadmin libvirt docker kvm)
 
 # 变量
 DRY_RUN=0

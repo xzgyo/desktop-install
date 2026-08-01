@@ -236,9 +236,13 @@ do_install_de() {
     bash-completion sudo iproute2 net-tools iputils-ping nano
     vim procps curl wget git screen apt-transport-https ca-certificates
   )
+  local VGA_PKGS=(
+    mesa-utils mesa-va-drivers mesa-vulkan-drivers libgl1-mesa-dri
+    libegl1 libglx-mesa0 vulkan-tools
+  )
   if [ $MINIMAL -eq 0 ]; then
     local DE_PKGS=(
-      dbus-x11 eject cups fonts-symbola 'fonts-noto*' xdg-utils
+      dbus-x11 eject cups fonts-symbola 'fonts-noto*' xdg-utils x11-utils
       yaru-theme-gtk yaru-theme-icon yaru-theme-sound pulseaudio paprefs
       pavucontrol xfce4 xfce4-notifyd xfce4-taskmanager xfce4-terminal
       thunar-archive-plugin thunar-media-tags-plugin xfce4-battery-plugin
@@ -254,7 +258,7 @@ do_install_de() {
   else
   # Minimal installation
     local DE_PKGS=(
-      dbus-x11 eject cups fonts-symbola xdg-utils
+      dbus-x11 eject cups fonts-symbola xdg-utils x11-utils
       xfce4-notifyd xfce4 xfce4-terminal
     )
   fi
@@ -265,6 +269,7 @@ do_install_de() {
   fi
   apt full-upgrade "$SIMULATE_OR_Y" || { echo -e "\033[33mUpgrade FAILED!\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
   apt install "$SIMULATE_OR_Y" "${BASE_TOOLS_PKGS[@]}" || { echo -e "\033[33mFailed to install some tools...\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); }
+  apt install "$SIMULATE_OR_Y" "${VGA_PKGS[@]}" || { echo -e "\033[31mFailed to install video drivers (mesa)...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
   apt install "$SIMULATE_OR_Y" --no-install-recommends "${DE_PKGS[@]}" || { echo -e "\033[31mFailed to install desktop...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
   apt autoremove --purge "$SIMULATE_OR_Y" || { echo -e "\033[31mFailed to apt autoremove --purge...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); }
 }

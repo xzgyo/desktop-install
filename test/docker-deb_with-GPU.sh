@@ -1,1 +1,1 @@
-docker run -it --name debian_desktop --hostname debian -e LANG=C.UTF-8 -e TERM=xterm-256color -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/dri --cap-add=PERFMON --cap-add=SYS_ADMIN debian:testing
+docker run -it --name debian_desktop --hostname debian -e LANG=C.UTF-8 -e TERM=xterm-256color -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/dri --cap-add=PERFMON --cap-add=SYS_ADMIN --security-opt apparmor=unconfined --security-opt seccomp=unconfined debian:testing

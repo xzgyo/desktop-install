@@ -213,25 +213,23 @@ do_install_de() {
   )
   if [ $MINIMAL -eq 0 ]; then
     local DE_PKGS=(
-      dbus-x11 eject cups fonts-symbola xdg-utils notify-osd
-      'fonts-noto*' xfce4 xfce4-terminal xfce4-appmenu-plugin
-      xfce4-netload-plugin xfce4-battery-plugin xfce4-clipman-plugin 
+      dbus-x11 eject cups fonts-symbola xdg-utils xfce4-notifyd
+      'fonts-noto*' pulseaudio paprefs pavucontrol xfce4 xfce4-terminal
+      xfce4-netload-plugin xfce4-battery-plugin xfce4-clipman-plugin
       xfce4-places-plugin xfce4-cpufreq-plugin xfce4-sensors-plugin
-      xfce4-cpugraph-plugin xfce4-smartbookmark-plugin
-      xfce4-datetime-plugin xfce4-systemload-plugin
-      xfce4-diskperf-plugin xfce4-time-out-plugin xfce4-docklike-plugin
-      xfce4-timer-plugin xfce4-eyes-plugin xfce4-verve-plugin
-      xfce4-fsguard-plugin xfce4-wavelan-plugin xfce4-genmon-plugin
-      xfce4-weather-plugin xfce4-indicator-plugin
-      xfce4-whiskermenu-plugin xfce4-mailwatch-plugin
-      xfce4-windowck-plugin xfce4-mount-plugin
-      xfce4-xkb-plugin xfce4-mpc-plugin
+      xfce4-cpugraph-plugin xfce4-smartbookmark-plugin xfce4-datetime-plugin
+      xfce4-systemload-plugin xfce4-diskperf-plugin xfce4-time-out-plugin
+      xfce4-docklike-plugin xfce4-timer-plugin xfce4-eyes-plugin
+      xfce4-verve-plugin xfce4-fsguard-plugin xfce4-wavelan-plugin
+      xfce4-genmon-plugin xfce4-weather-plugin xfce4-indicator-plugin
+      xfce4-whiskermenu-plugin xfce4-mailwatch-plugin xfce4-windowck-plugin
+      xfce4-mount-plugin xfce4-xkb-plugin xfce4-mpc-plugin
     )
   else
   # Minimal installation
     local DE_PKGS=(
       dbus-x11 eject cups fonts-symbola xdg-utils
-      notify-osd xfce4 xfce4-terminal
+      xfce4-notifyd xfce4 xfce4-terminal
     )
   fi
   if [ $DRY_RUN -eq 1 ]; then

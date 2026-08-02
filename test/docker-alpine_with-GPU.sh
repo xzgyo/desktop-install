@@ -1,0 +1,1 @@
+docker run -it --name alpine_desktop --hostname alpine -e LANG=C.UTF-8 -e TERM=xterm-256color -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/dri --cap-add=PERFMON --cap-add=SYS_ADMIN --security-opt apparmor=unconfined --security-opt seccomp=unconfined alpine:edge

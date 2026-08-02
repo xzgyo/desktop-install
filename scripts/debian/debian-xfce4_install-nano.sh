@@ -233,7 +233,7 @@ do_install_de() {
   # Minimal installation
     local DE_PKGS=(
       dbus-x11 eject cups fonts-symbola xdg-utils x11-utils
-      xfce4-notifyd xfce4 xfce4-terminal
+      pulseaudio paprefs pavucontrol xfce4 xfce4-notifyd xfce4-terminal
     )
   fi
   if [ $DRY_RUN -eq 1 ]; then

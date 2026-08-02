@@ -157,7 +157,7 @@ do_install_de() {
   else
   # Minimal installation
     local DE_PKGS=(
-      dbus cups xdg-utils font-noto-all xfce4 xfce4-terminal
+      dbus cups xdg-utils font-noto-all pulseaudio pavucontrol xfce4 xfce4-terminal
     )
   fi
   if [ $DRY_RUN -eq 1 ]; then

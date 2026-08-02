@@ -159,7 +159,7 @@ do_install_de() {
   # Minimal installation
     local DE_PKGS=(
       dbus cups xdg-utils noto-fonts noto-fonts-cjk noto-fonts-emoji
-      noto-fonts-extra xfce4 xfce4-terminal
+      noto-fonts-extra pulseaudio paprefs pavucontrol xfce4 xfce4-terminal
     )
   fi
   if [ $DRY_RUN -eq 1 ]; then

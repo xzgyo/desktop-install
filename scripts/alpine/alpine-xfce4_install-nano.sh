@@ -136,8 +136,8 @@ set_cn_mirror() {
 do_install_de() {
   local SIMULATE_OR_Y="$( [ $DRY_RUN -eq 1 ] && echo '--simulate' || echo '-y' )"
   local BASE_TOOLS_PKGS=(
-    bash-completion sudo-rs iproute2 net-tools iputils nano vim procps-ng curl wget
-    screen ca-certificates
+    bash-completion sudo-rs iproute2 net-tools iputils nano vim procps-ng curl
+    wget screen ca-certificates
   )
   local VGA_PKGS=(
     mesa mesa-utils mesa-dri-gallium mesa-egl mesa-gl mesa-gles mesa-va-gallium

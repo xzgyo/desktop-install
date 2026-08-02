@@ -1,5 +1,5 @@
-bash-completion sudo-rs iproute2 net-tools iputils nano vim procps-ng curl wget
-screen ca-certificates
+bash bash-completion sudo-rs iproute2 net-tools iputils nano vim procps-ng curl
+wget screen ca-certificates
 
 mesa mesa-utils mesa-dri-gallium mesa-egl mesa-gl mesa-gles mesa-va-gallium
 vulkan-loader vulkan-tools mesa-vulkan-ati mesa-vulkan-intel mesa-vulkan-nouveau

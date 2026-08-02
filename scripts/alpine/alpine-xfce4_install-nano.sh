@@ -217,8 +217,8 @@ create_user_account() {
       printf 'Invite \033[1m%s\033[0m into %s\n' "$NEW_USERNAME" "$g"
     done
   else
-    useradd -m -u "$NEW_UID" -s /bin/bash "$NEW_USERNAME" && \
-    for g in $COMMON_GROUPS; do usermod -aG "$g" "$NEW_USERNAME" || true; done
+    adduser -D -u "$NEW_UID" -s /bin/bash "$NEW_USERNAME" && \
+    for g in $COMMON_GROUPS; do addgroup "$NEW_USERNAME" "$g" || true; done
   fi
 
   # Set password

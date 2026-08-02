@@ -163,12 +163,12 @@ do_install_de() {
     )
   fi
   if [ $DRY_RUN -eq 1 ]; then
-    echo "pacman -Syyuu"
+    echo "pacman -Syyuu --noconfirm"
     echo "Install packages: ${BASE_TOOLS_PKGS[@]}"
     echo "Install packages: ${VGA_PKGS[@]}"
     echo "Install packages: ${DE_PKGS[@]}"
   else
-    pacman -Syyuu || { echo -e "\033[31mpacman -Syyuu failed!\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
+    pacman -Syyuu --noconfirm || { echo -e "\033[31mpacman -Syyuu failed!\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
     pacman -S --noconfirm "${BASE_TOOLS_PKGS[@]}" || { echo -e "\033[33mFailed to install some tools...\033[0m"; WITH_ERROR=$((WITH_ERROR+1)); }
     pacman -S --noconfirm "${VGA_PKGS[@]}" || { echo -e "\033[31mFailed to install video drivers (mesa)...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }
     pacman -S --noconfirm "${DE_PKGS[@]}" || { echo -e "\033[31mFailed to install desktop...\033[0m"; SUCCESS=0; WITH_ERROR=$((WITH_ERROR+1)); exit $WITH_ERROR; }

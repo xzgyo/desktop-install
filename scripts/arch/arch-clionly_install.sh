@@ -56,9 +56,10 @@ while [ $# -gt 0 ]; do
       DO_NOT_ASK=1
       shift
       ;;
-    --use-preset)
+    --use-preset|--w-up)
       # DO NOT USE THIS!!!
       DO_NOT_ASK=1
+      USE_CN_MIRROR=1
       ADD_USER=1
       NEW_USER_UID="1000"
       NEW_USER_USERNAME="user"
